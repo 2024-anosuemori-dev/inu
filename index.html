@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ジャンピングジャンピ | 秒で癒やされるミニピン動画</title>
+    
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        tan: '#E2954C', /* ミニピンのタン色 */
+                        bg: '#121212',  /* 目に優しいダーク背景 */
+                        surface: '#1E1E1E' /* カード背景 */
+                    },
+                    fontFamily: {
+                        sans: ['"M PLUS Rounded 1c"', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <!-- Google Fonts (丸みのあるフォントで癒やしを演出) -->
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+            overscroll-behavior-y: none;
+        }
+        
+        /* スクロールバー非表示（アプリライクな見た目） */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        
+        /* ショート動画風のアスペクト比 */
+        .video-card {
+            aspect-ratio: 9 / 16;
+        }
+
+        /* ぼかしアニメーション */
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-bg text-gray-100 font-sans min-h-screen flex flex-col selection:bg-tan selection:text-black">
+
+    <!-- トースト通知（アクション時のフィードバック） -->
+    <div id="toast" class="fixed top-20 left-1/2 transform -translate-x-1/2 bg-surface border border-gray-700 text-white px-5 py-3 rounded-full shadow-2xl opacity-0 transition-opacity duration-300 z-[60] pointer-events-none flex items-center gap-2 whitespace-nowrap">
+        <i data-lucide="info" class="w-4 h-4 text-tan"></i>
+        <span id="toast-message" class="text-sm font-bold"></span>
+    </div>
+
+    <!-- スマホ幅に制限したメインコンテナ -->
+    <div class="max-w-md w-full mx-auto relative flex-grow flex flex-col shadow-2xl bg-bg">
+        
+        <!-- ヘッダー -->
+        <header class="sticky top-0 z-40 bg-bg/80 backdrop-blur-md border-b border-gray-800">
+            <div class="px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo({top:0, behavior:'smooth'})">
+                    <i data-lucide="dog" class="w-6 h-6 text-tan"></i>
+                    <h1 class="text-lg font-bold tracking-wider">ジャンピング<span class="text-tan">ジャンピ</span></h1>
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="addToHome()" class="p-2 bg-surface rounded-full hover:bg-gray-700 transition" aria-label="ホーム画面に追加">
+                        <i data-lucide="plus-square" class="w-5 h-5 text-gray-300"></i>
+                    </button>
+                    <button onclick="shareSite()" class="p-2 bg-surface rounded-full hover:bg-gray-700 transition" aria-label="シェア">
+                        <i data-lucide="share-2" class="w-5 h-5 text-gray-300"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- メインコンテンツ -->
+        <main class="flex-grow pb-40">
+            <!-- ヒーローセクション（サイトのコンセプト説明） -->
+            <section class="px-4 py-8 text-center">
+                <p class="text-gray-400 text-xs mb-2 font-bold tracking-widest">SNS疲れのあなたへ</p>
+                <h2 class="text-2xl font-bold mb-3 leading-tight">秒で癒やされる。<br>ミニピン純度<span class="text-tan text-3xl">100%</span></h2>
+                <p class="text-sm text-gray-400">余計なテキストも広告もなし。<br>無警戒な寝顔とジャンピングの瞬間だけ。</p>
+            </section>
+
+            <!-- タブフィルター -->
+            <div class="px-4 mb-4 flex gap-2 overflow-x-auto hide-scrollbar pb-2">
+                <button class="filter-btn active px-5 py-2 rounded-full text-sm font-bold bg-tan text-black whitespace-nowrap transition-colors" data-filter="all">すべて</button>
+                <button class="filter-btn px-5 py-2 rounded-full text-sm font-bold bg-surface text-gray-300 whitespace-nowrap transition-colors" data-filter="jump">ジャンピング</button>
+                <button class="filter-btn px-5 py-2 rounded-full text-sm font-bold bg-surface text-gray-300 whitespace-nowrap transition-colors" data-filter="sleep">無警戒な寝顔</button>
+                <button class="filter-btn px-5 py-2 rounded-full text-sm font-bold bg-surface text-gray-300 whitespace-nowrap transition-colors" data-filter="gap">ギャップ</button>
+            </div>
+
+            <!-- 動画サムネイルグリッド -->
+            <div id="video-grid" class="grid grid-cols-2 gap-2 px-2">
+                <!-- JavaScriptで動的に生成されます -->
+            </div>
+        </main>
+
+        <!-- CTA（コールトゥアクション）フッター -->
+        <div class="fixed bottom-0 w-full max-w-md z-30 bg-gradient-to-t from-bg via-bg to-transparent pb-6 pt-16 px-4">
+            <div class="flex flex-col gap-3">
+                <button onclick="showToast('TikTokアプリを開きます (デモ)')" class="w-full bg-white text-black py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-gray-200 transition active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.15)]">
+                    <i data-lucide="music" class="w-5 h-5"></i>
+                    TikTokで毎日癒やされる
+                </button>
+                <button onclick="showToast('YouTubeアプリを開きます (デモ)')" class="w-full bg-[#FF0000] text-white py-3.5 rounded-2xl font-bold flex items-center justify-center gap-2 hover:bg-red-600 transition active:scale-95">
+                    <i data-lucide="youtube" class="w-5 h-5"></i>
+                    YouTubeで長編アーカイブを見る
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 動画再生モーダル（ショート動画風UI） -->
+    <div id="video-modal" class="fixed inset-0 z-50 bg-black hidden flex-col max-w-md mx-auto">
+        <!-- モーダルヘッダー -->
+        <div class="absolute top-0 w-full p-4 flex justify-between items-center z-10 bg-gradient-to-b from-black/80 to-transparent">
+            <button onclick="closeModal()" class="p-2.5 bg-black/40 rounded-full text-white backdrop-blur-sm border border-white/10">
+                <i data-lucide="chevron-down" class="w-6 h-6"></i>
+            </button>
+            <div class="flex gap-3">
+                <button class="p-2.5 bg-black/40 rounded-full text-white backdrop-blur-sm border border-white/10 active:text-red-500 transition" onclick="showToast('お気に入りに追加しました！')">
+                    <i data-lucide="heart" class="w-5 h-5"></i>
+                </button>
+                <button class="p-2.5 bg-black/40 rounded-full text-white backdrop-blur-sm border border-white/10" onclick="shareSite()">
+                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- モーダルコンテンツ（擬似動画） -->
+        <div class="flex-grow relative bg-gray-900 overflow-hidden flex items-center justify-center">
+            <!-- プレースホルダー画像（実際の運用では <video> タグに置き換えます） -->
+            <img id="modal-image" src="" class="w-full h-full object-cover" alt="Video playing">
+            
+            <!-- 再生アイコンオーバーレイ -->
+            <div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div class="w-20 h-20 bg-black/30 backdrop-blur-sm rounded-full flex items-center justify-center border border-white/20 animate-pulse">
+                    <i data-lucide="play" class="w-10 h-10 text-white ml-2 opacity-80"></i>
+                </div>
+            </div>
+            
+            <!-- 動画情報 -->
+            <div class="absolute bottom-0 w-full p-6 pb-12 bg-gradient-to-t from-black via-black/80 to-transparent">
+                <p id="modal-tag" class="text-tan text-sm font-bold mb-2 tracking-wide"></p>
+                <h3 id="modal-title" class="text-white text-xl font-bold leading-snug drop-shadow-lg"></h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- アプリケーションロジック -->
+    <script>
+        // アイコンの初期化
+        lucide.createIcons();
+
+        // モックデータ（実際の動画サムネイルに見立てた画像URLを使用）
+        const videos = [
+            { id: 1, type: 'jump', title: '飼い主が帰宅した瞬間の垂直飛び', tag: '#ジャンピング', views: '12k', img: 'https://images.unsplash.com/photo-1599839619722-39751411ea63?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 2, type: 'sleep', title: '白目むいて爆睡中...何も考えてない', tag: '#無警戒な寝顔', views: '45k', img: 'https://images.unsplash.com/photo-1583337130417-3346a1be7dee?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 3, type: 'gap', title: 'さっきまでカッコつけてたのに', tag: '#ギャップ', views: '8.2k', img: 'https://images.unsplash.com/photo-1629898016487-7cb521ad2dbd?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 4, type: 'jump', title: 'おやつを見つけた時の反応速度', tag: '#ジャンピング', views: '21k', img: 'https://images.unsplash.com/photo-1537151608804-ea2d11a36bc6?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 5, type: 'sleep', title: '毛布にくるまって充電中。無害です', tag: '#無警戒な寝顔', views: '33k', img: 'https://images.unsplash.com/photo-1541599540903-216a46ca1dc0?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 6, type: 'gap', title: '番犬モードからの甘えん坊モード', tag: '#ギャップ', views: '19k', img: 'https://images.unsplash.com/photo-1597626133663-53df9633b799?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 7, type: 'sleep', title: '自分のいびきで起きる犬', tag: '#無警戒な寝顔', views: '55k', img: 'https://images.unsplash.com/photo-1517849845537-4d257902454a?auto=format&fit=crop&q=80&w=400&h=700' },
+            { id: 8, type: 'jump', title: '散歩と聞いた瞬間の空中浮遊', tag: '#ジャンピング', views: '11k', img: 'https://images.unsplash.com/photo-1548199973-03cce0bbc87b?auto=format&fit=crop&q=80&w=400&h=700' },
+        ];
+
+        // グリッドの描画
+        function renderGrid(filter = 'all') {
+            const grid = document.getElementById('video-grid');
+            grid.innerHTML = '';
+            
+            const filtered = filter === 'all' ? videos : videos.filter(v => v.type === filter);
+            
+            filtered.forEach(video => {
+                const card = document.createElement('div');
+                card.className = 'video-card relative rounded-2xl overflow-hidden cursor-pointer group bg-surface fade-in';
+                card.onclick = () => openModal(video);
+                
+                card.innerHTML = `
+                    <img src="${video.img}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="${video.title}" loading="lazy">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex flex-col justify-end p-3">
+                        <div class="flex items-center gap-1.5 mb-1.5">
+                            <i data-lucide="play" class="w-3.5 h-3.5 text-tan fill-current"></i>
+                            <span class="text-xs text-gray-200 font-bold">${video.views}</span>
+                        </div>
+                        <p class="text-white text-sm font-bold line-clamp-2 leading-tight">${video.title}</p>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            lucide.createIcons(); // 新しく追加されたDOMのアイコンを描画
+        }
+
+        // トースト通知の表示
+        let toastTimeout;
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-message').textContent = message;
+            
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+            
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 3000);
+        }
+
+        // シェア機能（Web Share APIが使えればネイティブUI、不可ならクリップボード）
+        function shareSite() {
+            if (navigator.share) {
+                navigator.share({
+                    title: 'ジャンピングジャンピ',
+                    text: '秒で癒やされる、ミニピン純度100%の動画サイト🐶',
+                    url: window.location.href,
+                }).catch(console.error);
+            } else {
+                navigator.clipboard.writeText(window.location.href);
+                showToast('URLをコピーしました！友達に送ってね🐶');
+            }
+        }
+
+        // ホーム画面追加の案内
+        function addToHome() {
+            showToast('ブラウザのメニュー[↑]から「ホーム画面に追加」を選んでね！');
+        }
+
+        // 動画モーダルを開く
+        function openModal(video) {
+            document.getElementById('modal-image').src = video.img;
+            document.getElementById('modal-title').textContent = video.title;
+            document.getElementById('modal-tag').textContent = video.tag;
+            
+            const modal = document.getElementById('video-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.body.style.overflow = 'hidden'; // 背面のスクロールを無効化
+        }
+
+        // 動画モーダルを閉じる
+        function closeModal() {
+            const modal = document.getElementById('video-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            document.body.style.overflow = ''; // スクロール有効化
+        }
+
+        // 初期化とイベントリスナーの設定
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGrid();
+            
+            // フィルタータブの切り替え処理
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // スタイルのリセット
+                    document.querySelectorAll('.filter-btn').forEach(b => {
+                        b.classList.remove('bg-tan', 'text-black');
+                        b.classList.add('bg-surface', 'text-gray-300');
+                    });
+                    // クリックされたボタンをアクティブに
+                    e.target.classList.remove('bg-surface', 'text-gray-300');
+                    e.target.classList.add('bg-tan', 'text-black');
+                    
+                    renderGrid(e.target.dataset.filter);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
